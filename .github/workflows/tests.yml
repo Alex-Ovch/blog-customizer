@@ -19,7 +19,7 @@ jobs:
         run: exit 1
       - name: Get testing lib
         run: set -eu && git clone https://github.com/Yandex-Practicum/tests-blog-customizer.git /tmp/tests-blog-customizer
-      - name: Install browsers for Playwright
+      - name: Install Playwright browsers inside test repo
         run: npx playwright install --with-deps
         working-directory: /tmp/tests-blog-customizer
       - name: Run tests
