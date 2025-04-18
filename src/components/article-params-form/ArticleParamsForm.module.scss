@@ -5,12 +5,16 @@
 	height: 100%;
 	overflow: scroll;
 	overflow-y: overlay;
-	transform: translate(-616px);
+	transform: translate(-100%);
+	opacity: 0;
 	transition: transform 0.5s ease;
+	pointer-events: none;
 }
 
 .container_open {
 	transform: translate(0);
+	opacity: 1;
+	pointer-events: all;
 }
 
 .form {

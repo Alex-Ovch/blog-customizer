@@ -6,7 +6,7 @@ import { RadioGroup } from '../../ui/radio-group/RadioGroup';
 import { Select } from '../../ui/select/Select';
 import { Separator } from 'src/ui/separator';
 import { Text } from 'src/ui/text';
-import { RefObject } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 
 import {
 	defaultArticleState,
@@ -18,87 +18,108 @@ import {
 	OptionType,
 } from '../../constants/articleProps';
 
-type ArticleParamsFormProps = {
-	isOpen: boolean;
-	onToggle: () => void;
-	settings: typeof defaultArticleState;
-	onChange: (
-		key: keyof typeof defaultArticleState
-	) => (option: OptionType) => void;
-	sidebarRef?: RefObject<HTMLDivElement>;
-	onApply?: () => void;
-	onReset?: () => void;
+type Props = {
+	onSubmit: (settings: typeof defaultArticleState) => void;
 };
 
-export const ArticleParamsForm = ({
-	isOpen,
-	onToggle,
-	settings,
-	onChange,
-	sidebarRef,
-	onApply,
-	onReset,
-}: ArticleParamsFormProps) => {
+export const ArticleParamsForm = ({ onSubmit }: Props) => {
+	const [isOpen, setIsOpen] = useState(false);
+	const [formState, setFormState] = useState(defaultArticleState);
+	const sidebarRef = useRef<HTMLDivElement>(null);
+
+	// Закрытие по клику вне формы
+	useEffect(() => {
+		if (!isOpen) return;
+
+		const handleClickOutside = (event: MouseEvent) => {
+			if (
+				sidebarRef.current &&
+				!sidebarRef.current.contains(event.target as Node)
+			) {
+				setIsOpen(false);
+			}
+		};
+
+		document.addEventListener('mousedown', handleClickOutside);
+		return () => {
+			document.removeEventListener('mousedown', handleClickOutside);
+		};
+	}, [isOpen]);
+
+	const handleChange = useCallback(
+		(key: keyof typeof defaultArticleState) => (option: OptionType) => {
+			setFormState((prev) => ({ ...prev, [key]: option }));
+		},
+		[]
+	);
+
+	const handleApply = (e: React.FormEvent<HTMLFormElement>) => {
+		e.preventDefault();
+		onSubmit(formState);
+		setIsOpen(false);
+	};
+
+	const handleReset = () => {
+		setFormState(defaultArticleState);
+		onSubmit(defaultArticleState);
+		setIsOpen(false);
+	};
+
 	return (
 		<>
-			<ArrowButton isOpen={isOpen} onClick={onToggle} />
+			<ArrowButton isOpen={isOpen} onClick={() => setIsOpen((prev) => !prev)} />
 			<aside
 				ref={sidebarRef}
 				className={clsx(styles.container, { [styles.container_open]: isOpen })}>
-				<form className={styles.form}>
-					{/* Настройки */}
+				<form
+					className={styles.form}
+					onSubmit={handleApply}
+					onReset={handleReset}>
 					<Text as='h1' size={31} weight={800} uppercase dynamicLite>
 						Задайте параметры
 					</Text>
+
 					<Select
 						title='Шрифт'
-						selected={settings.fontFamilyOption}
+						selected={formState.fontFamilyOption}
 						options={fontFamilyOptions}
-						onChange={onChange('fontFamilyOption')}
+						onChange={handleChange('fontFamilyOption')}
 					/>
 
 					<RadioGroup
 						title='Размер шрифта'
-						selected={settings.fontSizeOption}
+						selected={formState.fontSizeOption}
 						options={fontSizeOptions}
 						name='fontSize'
-						onChange={onChange('fontSizeOption')}
+						onChange={handleChange('fontSizeOption')}
 					/>
 
 					<Select
 						title='Цвет шрифта'
-						selected={settings.fontColor}
+						selected={formState.fontColor}
 						options={fontColors}
-						onChange={onChange('fontColor')}
+						onChange={handleChange('fontColor')}
 					/>
+
 					<Separator />
 
 					<Select
 						title='Цвет фона'
-						selected={settings.backgroundColor}
+						selected={formState.backgroundColor}
 						options={backgroundColors}
-						onChange={onChange('backgroundColor')}
+						onChange={handleChange('backgroundColor')}
 					/>
 
 					<Select
 						title='Ширина контента'
-						selected={settings.contentWidth}
+						selected={formState.contentWidth}
 						options={contentWidthArr}
-						onChange={onChange('contentWidth')}
+						onChange={handleChange('contentWidth')}
 					/>
+
 					<div className={styles.bottomContainer}>
-						<Button
-							title='Сбросить'
-							htmlType='button'
-							type='clear'
-							onClick={onReset}
-						/>
-						<Button
-							title='Применить'
-							htmlType='button'
-							type='apply'
-							onClick={onApply}
-						/>
+						<Button title='Сбросить' htmlType='reset' type='clear' />
+						<Button title='Применить' htmlType='submit' type='apply' />
 					</div>
 				</form>
 			</aside>
