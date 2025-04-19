@@ -23,20 +23,20 @@ type Props = {
 };
 
 export const ArticleParamsForm = ({ onSubmit }: Props) => {
-	const [isOpen, setIsOpen] = useState(false);
+	const [isMenuOpen, setIsMenuOpen] = useState(false);
 	const [formState, setFormState] = useState(defaultArticleState);
 	const sidebarRef = useRef<HTMLDivElement>(null);
 
 	// Закрытие по клику вне формы
 	useEffect(() => {
-		if (!isOpen) return;
+		if (!isMenuOpen) return;
 
 		const handleClickOutside = (event: MouseEvent) => {
 			if (
 				sidebarRef.current &&
 				!sidebarRef.current.contains(event.target as Node)
 			) {
-				setIsOpen(false);
+				setIsMenuOpen(false);
 			}
 		};
 
@@ -44,7 +44,7 @@ export const ArticleParamsForm = ({ onSubmit }: Props) => {
 		return () => {
 			document.removeEventListener('mousedown', handleClickOutside);
 		};
-	}, [isOpen]);
+	}, [isMenuOpen]);
 
 	const handleChange = useCallback(
 		(key: keyof typeof defaultArticleState) => (option: OptionType) => {
@@ -56,21 +56,26 @@ export const ArticleParamsForm = ({ onSubmit }: Props) => {
 	const handleApply = (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		onSubmit(formState);
-		setIsOpen(false);
+		setIsMenuOpen(false);
 	};
 
 	const handleReset = () => {
 		setFormState(defaultArticleState);
 		onSubmit(defaultArticleState);
-		setIsOpen(false);
+		setIsMenuOpen(false);
 	};
 
 	return (
 		<>
-			<ArrowButton isOpen={isOpen} onClick={() => setIsOpen((prev) => !prev)} />
+			<ArrowButton
+				isOpen={isMenuOpen}
+				onClick={() => setIsMenuOpen((prev) => !prev)}
+			/>
 			<aside
 				ref={sidebarRef}
-				className={clsx(styles.container, { [styles.container_open]: isOpen })}>
+				className={clsx(styles.container, {
+					[styles.container_open]: isMenuOpen,
+				})}>
 				<form
 					className={styles.form}
 					onSubmit={handleApply}
